@@ -1,0 +1,209 @@
+---
+title: "Untitled"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(dplyr)
+
+library(gapminder)
+data("gapminder")
+attach(gapminder)
+
+gapminder <- read.csv("data/gapminder_data.csv", header = TRUE)
+head(gapminder)
+
+```
+
+```{}
+gap <-gapminder
+rm(gapminder)
+
+mean(gap[gap$continent == "Africa", "gdpPercap"])
+
+
+mean.gdpAfrica <- mean(gap$gdpPercap[continent=="Africa"])
+mean.gdpAfrica
+mean.gdpAsia <- mean(gap$gdpPercap[continent=="Asia"])
+mean.gdpAsia
+mean.gdpAmericas <- mean(gap$gdpPercap[continent=="Americas"])
+mean.gdpAmericas
+```
+
+```{}
+ncol(gap)
+names(gap)
+subset_gap <- %>% select (year, country, gdpPercap)
+```
+
+```{}
+year_country_gdp_euro <- gap %>%
+fliter(continent =="Europe") %>%
+select(year, country, gdpPercap)
+
+year_country_gdp_euro
+
+str(year_country_gdp_euro)
+```
+
+```{}
+year_country_lifeExp_Africa <- gap %>%
+filter(continent == "Africa", year == 2007) %>%
+select(year, country, lifeExp)
+
+dim(year_country_lifeExp_Africa)
+```
+
+```{}
+head(gap)
+str(gap)
+gap_by_continent <- gap %>% group_by(continent)
+head(gap_by_continent)
+str(gap_by_continent)
+
+```
+group_by() turns a single data frame into a set of data frames grouped based on some variable.
+```{}
+gdp_by_continent <- gap_by_continent %>%
+summarize(mean_gdpPercap=mean(gdpPercap))
+
+gdp_by_continent 
+
+```
+
+```{}
+Africa_lifeExp_yr <- gap %>%
+filter(continent == "Africa") %>%
+group_by(year)  %>%
+summarize(avg_life = mean(lifeExp))
+options(pillar.sigfig = 4)
+Africa_lifeExp_yr
+
+```
+
+calculate the average life expectancy per country. Which has the longest avearge life expectancy> and which has the shoretst average life expectancy?
+
+```{}
+life <- gap %>%
+group_by(country) %>%
+summarize(mean_lifeExp = mean(lifeExp))
+
+life %>% filter(mean_lifeExp == min(mean_lifeExp))
+
+life %>% filter(mean_lifeExp == max(mean_lifeExp))
+
+```
+mutate()is a function in dplyr that lets you add a column to a data frame based the data
+```{}
+billgdp <- gap %>%
+filter (year==2007)%>%
+mutate(billion_gdp = gdpPercap * pop / 10^9) %>%
+select(continent, country, billion_gdp)
+
+colnames(billgdp)
+dim(billgdp)
+```
+
+```{}
+gdp_by_cont <- gap %>%
+group_by(continent,year) %>%
+summarize(mean_gdp = mean(gdpPercap),
+sd_gdp=sd(gdpPercap),
+mean_pop=mean(pop),
+sample_size=n(),
+se_gdp=sd_gdp/sqrt(sample_size))
+
+gdp_by_cont
+
+str(gdp_by_cont)
+
+gap_by_cont <- gdp_by_cont %>% data.frame()
+
+
+str(gdp_by_cont)
+
+```
+#function n()counts sample size of the var grouped by
+
+```{}
+library(ggplot2)
+gap %>% filter(continent == "Asia") %>%
+ggplot(aes(x= gdpPercap, y=lifeExp))+
+geom_point()
+```
+
+```{}
+gap_wide <- read.csv("data/gapminder_wide.csv",stringsAsFactors = FALSE)
+options(stringsAsFactors = FALSE)
+
+dim(gap_wide)
+colnames(gap_wide)
+```
+
+```{}
+head(gap_wide)
+library(tidyr)
+## To make the data long, we use the function gather()
+gap_long <- gap_wide %>%
+gather(obstype_year, obs_values, -continent, -country)
+dim(gap_long)
+```
+
+```{}
+gap_long <- gap_long %>% separate(obstype_year, into = c("obs_type", "year"), sep="_")
+head(gap_long)
+
+gap_long$year <- as.integer(gap_long$year)
+head(gap_long)
+
+
+```
+Using the gap_long dataset, summarize the mean life expectancy by continent.
+
+```{}
+gap_long %>% filter(obs_type == "lifeExp")%>%
+group_by(continent) %>%
+summarize(mean_lifeExp = mean(obs_values))
+
+temp_gap <- filter(gap_long, obs_type == "lifeExp")
+temp_gap <- group_by(temp_gap, continent)
+temp_gap <- summarize(temp_gap, mean_lifeExp = mean(obs_values))
+temp_gap 
+
+str(temp_gap)
+
+```
+
+```{}
+str(gap_long)
+gap_normal <- gap_long %>% spread(obs_type, obs_values)
+str(gap_normal)
+```
+
+colnames(gap_normal)
+str(gap_normal)
+
+str(gap)
+colnames(gap)
+
+```{}
+names(gap)
+gap_normal <- gap_normal [, names(gap)]
+
+names(gap)
+names(gap_normal)
+
+all.equal(gap, gap_normal)
+
+head(gap)
+head(gap_normal)
+all.equal(gap, gap_normal)
+str(gap)
+str(gap_normal)
+```
